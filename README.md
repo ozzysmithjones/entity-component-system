@@ -26,7 +26,7 @@ You use Scene to create a game *level* or *world* that contains these entity kin
 ecs::Scene<Human, Goblin> first_level;
 ```
 
-The main way to use this library is by using methods on the *Scene* class. To implement system like behaviour, you can call for_each(). Which iterates over the components in the scene and performs some behaviour with them: 
+To implement system like behaviour, you can call for_each(). Which iterates over the components in the scene and performs some behaviour with them: 
 
 ```C++
 ecs::Scene<Human, Goblin> first_level;
