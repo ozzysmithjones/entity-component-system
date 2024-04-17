@@ -125,10 +125,23 @@ namespace ecs {
 			}
 
 			std::tuple<Components&...> operator[](std::size_t index) {
+
+#ifndef NDEBUG
+				if (index >= count) {
+					throw std::out_of_range("Arc::operator[] : index is out of range");
+				}
+#endif
+
 				return { *(std::get<Components*>(components_tuple) + index)... };
 			}
 
 			std::tuple<Components&...> at(std::size_t index) {
+
+#ifndef NDEBUG
+				if (index >= count) {
+					throw std::out_of_range("Arc::at : index is out of range");
+				}
+#endif
 				return { *(std::get<Components*>(components_tuple) + index)... };
 			}
 
