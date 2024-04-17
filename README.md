@@ -13,6 +13,7 @@ Note that the behaviour and state are separate. Generally, components only conta
 # API
 
 This Entity-Component-System uses two primary types: *Scene* and *EntityArchetype*. You use *EntityArchetype* to declare the entity kinds that you want in your game and their components:
+Note that "components" in this implementation are just C++ structs.
 
 ```C++
 using Human = ecs::EntityArchetype<Transform, Mesh, Collider, Health>;
