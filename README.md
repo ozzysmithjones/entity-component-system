@@ -10,7 +10,7 @@ An Entity-Component-System is a data-orientated approach of organising entities 
 
 # API
 
-This Entity-Component-System uses two primary types: *Scene* and *EntityArchetype*. You use *EntityArchetype* to declare the entity kinds that you want in your game and their components. For example:
+This Entity-Component-System uses two primary types: *Scene* and *EntityArchetype*. You use *EntityArchetype* to declare the entity kinds that you want in your game and their components:
 
 ```C++
 using Human = ecs::EntityArchetype<Transform, Mesh, Collider, Health>;
@@ -23,7 +23,7 @@ You use Scene to create a game *level* or *world* that contains these entity kin
 ecs::Scene<Human, Goblin> first_level;
 ```
 
-The main way to use this library is by interfacing with methods that can be found on the *Scene* class. For example, to implement system like behaviour, you can call for_each(). Which enumerates over the components in the scene and performs some behaviour on them: 
+The main way to use this library is by using methods that can be found on the *Scene* class. To implement system like behaviour, you can call for_each(). Which iterates over the components in the scene and performs some behaviour with them: 
 
 ```C++
 ecs::Scene<Human, Goblin> first_level;
