@@ -8,7 +8,7 @@ An Entity-Component-System is a data-orientated approach of organising entities 
 - Entities: Entities in ECS are just identifiers used to associate the components that make up a single instance of an object. These identifiers may be indices or 64 bit values.
 - Systems: Systems are functions or behaviours that process a collection of components to perform logic.
 
-Note that the behaviour and state are separate. Generally, components only contain state and they are stored in contiguous arrays for efficiency. Systems iterate through the components and apply transformations to the state to implement certain behaviours - like rendering or physics calculations. Storing the components this way minimizes the overall *cache misses* that might occur, which is often a bottleneck when processing a large amount of game objects.
+Note that the behaviour and state are separate. Generally, components only contain state and they are stored in contiguous arrays for efficiency. Systems iterate through the components and apply transformations to the state to implement certain behaviours - like rendering or physics calculations. Storing the components this way minimizes the overall *cache misses* that might occur, which is often a bottleneck when processing a large amount of game characters.
 
 # API
 
