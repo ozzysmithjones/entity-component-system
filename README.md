@@ -2,7 +2,7 @@
 Header only entity component system. 
 
 # Explanation
-An Entity-Component-System is a data-orientated approach of organising entities within games. The idea is to layout entities (game characters, walls, objects) in a cache-friendly way so that they can be processed efficiently by the CPU. ECS uses three concepts to structure entities in an efficient way:
+An Entity-Component-System is a data-orientated approach of organising entities within games. The idea is to layout entities (game characters, walls, objects) in a cache-friendly way so that they can be processed efficiently by the CPU. ECS uses three concepts to structure entities in an efficient manner:
 
 - Components: Components are structures that store data.
 - Entities: Entities in ECS are just identifiers used to associate the components that make up a single instance of an object. These identifiers may be indices or 64 bit values.
