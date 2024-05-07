@@ -26,7 +26,6 @@ int main()
 		scene.create_entity<Goblin>();
 	}
 
-
 	ecs::EntityHandle to_find;
 	to_find.id = (1ull << 32) + 1;
 	to_find.archetype_index = 1;
@@ -42,9 +41,10 @@ int main()
 			std::cout << "entity id = " << handle.id << " integer = " << num << " float = " << f << '\n';
 		});
 
-	std::optional<ecs::EntityHandle> e = scene.find_if([](float f) { return f > 0.0f; });
+	std::optional<ecs::EntityHandle> e = scene.find_entity_where([](float f) { return f > 0.0f; });
 	if (!e.has_value()) {
 		std::cerr << "Failed to find entity!\n";
+		return 0;
 	}
 
 	{
@@ -53,13 +53,14 @@ int main()
 		*speed = 6.6f;
 	}
 
-	scene.destroy_if([](int health) { return health <= 0; });
+
+	scene.destroy_entities_where([](int health) { return health <= 0; });
 	std::cout << "\n\nAlive entities:\n\n";
 	scene.for_each([](ecs::EntityHandle handle, int num, float f)
 		{
 			std::cout << "entity id = " << handle.id << " integer = " << num << " float = " << f << '\n';
 		});
-
+	
 	//std::cout << a << "\n" << b << "\n" << c << "\nhello there!\n";
 	//arc.pop_back();
 	return 0;

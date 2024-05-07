@@ -369,13 +369,21 @@ namespace ecs {
 		}
 
 		template<typename F>
-		std::optional<EntityHandle> find_if(F&& func) {
-			return find_if<0>(std::forward<F>(func), std::type_identity<detail::to_function_t<F>>{});
+		std::optional<EntityHandle> find_entity_where(F&& condition) {
+			return find_entity_where<0>(std::forward<F>(condition), std::type_identity<detail::to_function_t<F>>{});
 		}
 
 		template<typename F>
-		void destroy_if(F&& func) {
-			destroy_if<0>(std::forward<F>(func), std::type_identity<detail::to_function_t<F>>{});
+		std::vector<EntityHandle> find_entities_where(F&& condition, std::size_t predicted_count = 4) {
+			std::vector<EntityHandle> found_entities;
+			found_entities.reserve(predicted_count);
+			find_entities_where<0>(found_entities, std::forward<F>(condition), std::type_identity<detail::to_function_t<F>>{});
+			return found_entities;
+		}
+
+		template<typename F>
+		void destroy_entities_where(F&& condition) {
+			destroy_entities_where<0>(std::forward<F>(condition), std::type_identity<detail::to_function_t<F>>{});
 		}
 
 		template<typename EntityArchetype>
@@ -411,7 +419,7 @@ namespace ecs {
 			destroy_entity<0>(entity, component_index);
 		}
 
-		void destroy_all_entities() {
+		void destroy_entities() {
 			for (auto& pair : id_index_pairs) {
 				recycled_ids.push(pair.first + (1ull << 32));
 				pair.first = 0;
@@ -527,7 +535,7 @@ namespace ecs {
 		}
 
 		template<std::size_t ArcIter, typename Func, typename ... Args>
-		std::optional<EntityHandle> find_if(Func&& func, std::type_identity<std::function<bool(Args...)>> function_identity) {
+		std::optional<EntityHandle> find_entity_where(Func&& func, std::type_identity<std::function<bool(Args...)>> function_identity) {
 			using Archetype = std::tuple_element_t<ArcIter, std::tuple<EntityArchetypes...>>;
 			Archetype& archetype = std::get<Archetype>(archetypes_tuple);
 			if constexpr (Archetype::template has_components<std::decay_t<Args>...>()) {
@@ -540,7 +548,7 @@ namespace ecs {
 			}
 
 			if constexpr (ArcIter < (sizeof...(EntityArchetypes) - 1)) {
-				return find_if<ArcIter + 1>(std::forward<Func>(func), function_identity);
+				return find_entity_where<ArcIter + 1>(std::forward<Func>(func), function_identity);
 			}
 			else {
 				return std::nullopt;
@@ -548,7 +556,26 @@ namespace ecs {
 		}
 
 		template<std::size_t ArcIter, typename Func, typename ... Args>
-		void destroy_if(Func&& func, std::type_identity<std::function<bool(Args...)>> function_identity) {
+		void find_entities_where(std::vector<EntityHandle>& found_entities, Func&& func, std::type_identity<std::function<bool(Args...)>> function_identity) {
+			using Archetype = std::tuple_element_t<ArcIter, std::tuple<EntityArchetypes...>>;
+			Archetype& archetype = std::get<Archetype>(archetypes_tuple);
+			if constexpr (Archetype::template has_components<std::decay_t<Args>...>()) {
+				std::size_t count = archetype.get_count();
+				for (std::size_t i = 0; i < count; ++i) {
+					if (std::apply(func, archetype.template get_components<std::decay_t<Args>...>(i))) {
+						found_entities.push_back(archetype.template get_component<EntityHandle>(i));
+					}
+				}
+			}
+
+			if constexpr (ArcIter < (sizeof...(EntityArchetypes) - 1)) {
+				return find_entities_where<ArcIter + 1>(found_entities, std::forward<Func>(func), function_identity);
+			}
+		}
+
+
+		template<std::size_t ArcIter, typename Func, typename ... Args>
+		void destroy_entities_where(Func&& func, std::type_identity<std::function<bool(Args...)>> function_identity) {
 			using Archetype = std::tuple_element_t<ArcIter, std::tuple<EntityArchetypes...>>;
 			Archetype& archetype = std::get<Archetype>(archetypes_tuple);
 			if constexpr (Archetype::template has_components<std::decay_t<Args>...>()) {
@@ -567,7 +594,7 @@ namespace ecs {
 			}
 
 			if constexpr (ArcIter < (sizeof...(EntityArchetypes) - 1)) {
-				destroy_if<ArcIter + 1>(std::forward<Func>(func), function_identity);
+				destroy_entities_where<ArcIter + 1>(std::forward<Func>(func), function_identity);
 			}
 		}
 
