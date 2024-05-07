@@ -41,7 +41,7 @@ int main()
 			std::cout << "entity id = " << handle.id << " integer = " << num << " float = " << f << '\n';
 		});
 
-	std::optional<ecs::EntityHandle> e = scene.find_entity_where([](float f) { return f > 0.0f; });
+	std::optional<ecs::EntityHandle> e = scene.find_entity_if([](float f) { return f > 0.0f; });
 	if (!e.has_value()) {
 		std::cerr << "Failed to find entity!\n";
 		return 0;

@@ -369,8 +369,8 @@ namespace ecs {
 		}
 
 		template<typename F>
-		std::optional<EntityHandle> find_entity_where(F&& condition) {
-			return find_entity_where<0>(std::forward<F>(condition), std::type_identity<detail::to_function_t<F>>{});
+		std::optional<EntityHandle> find_entity_if(F&& condition) {
+			return find_entity_if<0>(std::forward<F>(condition), std::type_identity<detail::to_function_t<F>>{});
 		}
 
 		template<typename F>
@@ -535,7 +535,7 @@ namespace ecs {
 		}
 
 		template<std::size_t ArcIter, typename Func, typename ... Args>
-		std::optional<EntityHandle> find_entity_where(Func&& func, std::type_identity<std::function<bool(Args...)>> function_identity) {
+		std::optional<EntityHandle> find_entity_if(Func&& func, std::type_identity<std::function<bool(Args...)>> function_identity) {
 			using Archetype = std::tuple_element_t<ArcIter, std::tuple<EntityArchetypes...>>;
 			Archetype& archetype = std::get<Archetype>(archetypes_tuple);
 			if constexpr (Archetype::template has_components<std::decay_t<Args>...>()) {
@@ -548,7 +548,7 @@ namespace ecs {
 			}
 
 			if constexpr (ArcIter < (sizeof...(EntityArchetypes) - 1)) {
-				return find_entity_where<ArcIter + 1>(std::forward<Func>(func), function_identity);
+				return find_entity_if<ArcIter + 1>(std::forward<Func>(func), function_identity);
 			}
 			else {
 				return std::nullopt;
