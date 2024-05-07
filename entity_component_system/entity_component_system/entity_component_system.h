@@ -1,7 +1,5 @@
 ﻿// entity_component_system.h : Include file for standard system include files,
 // or project specific include files.
-
-#pragma once
 #include <concepts>
 #include <cstdint>
 #include <exception>
@@ -35,7 +33,7 @@ namespace ecs {
 		using to_function_t = to_function<T>::type;
 
 		template<typename T>
-		typename to_function_t<T> as_function(T& lambda) {
+		to_function_t<T>::type as_function(T& lambda) {
 			return static_cast<to_function_t<T>>(lambda);
 		}
 
@@ -229,6 +227,16 @@ namespace ecs {
 			}
 
 			template<typename T>
+			T* try_get_component(std::size_t index) {
+				if constexpr (has_component<T>()) {
+					return (std::get<T*>(components_tuple) + index);
+				}
+				else {
+					return nullptr;
+				}
+			}
+
+			template<typename T>
 			static consteval bool has_component() {
 				return ((std::is_same_v<T, Components>) || ...);
 			}
@@ -311,7 +319,7 @@ namespace ecs {
 			std::size_t count;
 		};
 
-		
+
 	}
 
 	struct EntityHandle {
@@ -364,6 +372,9 @@ namespace ecs {
 			if (!recycled_ids.empty()) {
 				entity_handle.id = recycled_ids.top();
 				recycled_ids.pop();
+				std::pair<uint64_t, std::size_t>& pair = id_index_pairs[(entity_handle.id & UINT32_MAX) - 1];
+				pair.first = entity_handle.id;
+				pair.second = archetype.get_count() - 1;
 			}
 			else {
 				entity_handle.id = id_index_pairs.size() + 1;
@@ -391,15 +402,16 @@ namespace ecs {
 		void destroy_entity(ecs::EntityHandle entity, std::size_t component_index) {
 			if (ArcIter == entity.archetype_index) {
 				using Archetype = std::tuple_element_t<ArcIter, std::tuple<EntityArchetypes...>>;
-				Archetype& archetype = std::get<Archetype>(archetypes_tuple);
+				Archetype& archetype = std::get<ArcIter>(archetypes_tuple);
 
 				if (component_index != archetype.get_count() - 1) {
 					const uint64_t id = std::get<ecs::EntityHandle&>(archetype.back()).id;
 					std::pair<uint64_t, std::size_t>& pair = id_index_pairs[(id & UINT32_MAX) - 1];
 					pair.second = component_index;
+
+					archetype.at(component_index) = std::move(archetype.back());
 				}
 
-				archetype.at(component_index) = std::move(archetype.back());
 				archetype.pop_back();
 
 				std::pair<uint64_t, std::size_t>& pair = id_index_pairs[(entity.id & UINT32_MAX) - 1];
@@ -409,15 +421,14 @@ namespace ecs {
 			else if constexpr (ArcIter < sizeof...(EntityArchetypes) - 1) {
 				destroy_entity<ArcIter + 1>(entity, component_index);
 			}
-
 		}
 
 		template<std::size_t ArcIter = 0, typename ... Ts>
 		std::tuple<Ts*...> get_components(uint64_t archetype_index, std::size_t component_index) {
 			if (ArcIter == archetype_index) {
 				using Archetype = std::tuple_element_t<ArcIter, std::tuple<EntityArchetypes...>>;
-				Archetype& archetype = std::get<Archetype>(archetypes_tuple);
-				return { std::addressof(archetype.get_component<Ts>(component_index))... };
+				Archetype& archetype = std::get<ArcIter>(archetypes_tuple);
+				return { archetype.template try_get_component<Ts>(component_index)... };
 			}
 			else if constexpr (ArcIter < sizeof...(EntityArchetypes) - 1) {
 				return get_components<ArcIter + 1, Ts...>(archetype_index, component_index);
@@ -432,7 +443,7 @@ namespace ecs {
 			if (ArcIter == archetype_index) {
 				using Archetype = std::tuple_element_t<ArcIter, std::tuple<EntityArchetypes...>>;
 				Archetype& archetype = std::get<Archetype>(archetypes_tuple);
-				return std::addressof(archetype.get_component<T>(component_index));
+				return std::addressof(archetype.template try_get_component<T>(component_index));
 			}
 			else if constexpr (ArcIter < sizeof...(EntityArchetypes) - 1) {
 				return get_components<ArcIter + 1, T>(archetype_index, component_index);
@@ -461,7 +472,7 @@ namespace ecs {
 			if constexpr (Archetype::template has_components<std::decay_t<Args>...>()) {
 				std::size_t count = archetype.get_count();
 				for (std::size_t i = 0; i < count; ++i) {
-					std::apply(func, archetype.get_components<std::decay_t<Args>...>(i));
+					std::apply(func, archetype.template get_components<std::decay_t<Args>...>(i));
 				}
 			}
 
@@ -488,3 +499,6 @@ namespace ecs {
 		std::tuple<EntityArchetypes...> archetypes_tuple;
 	};
 }
+
+
+
